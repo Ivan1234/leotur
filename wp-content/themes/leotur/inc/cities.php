@@ -1,14 +1,14 @@
 <?php
 add_action('admin_menu', function(){
 	//add_menu_page( $page_title, $menu_title, $capability, $menu_slug, $function, $icon_url, $position );
-	add_menu_page( 'Транспорт', 'Транспорт', 'edit_pages', 'transport', 'add_my_setting', 'dashicons-admin-post', 48 ); 
+	add_menu_page( 'Місто', 'Місто', 'edit_pages', 'city', 'add_my_setting', 'dashicons-admin-post', 48 ); 
 } );
 
 // функция отвечает за вывод страницы настроек
 // подробнее смотрите API Настроек: http://wp-kama.ru/id_3773/api-optsiy-nastroek.html
 function add_my_setting(){
 	global $wpdb;
-	$results = $wpdb->get_results( 'SELECT * FROM '.$wpdb->prefix . 'transport', OBJECT );
+	$results = $wpdb->get_results( 'SELECT * FROM '.$wpdb->prefix . 'transport ORDER BY name', OBJECT );
 	$transport_items_html = '';
 	if (!empty($results)) {
 		foreach ($results as $item) {
@@ -17,6 +17,22 @@ function add_my_setting(){
 			$transport_items_html .= '<td><button class="button button-primary update_row">Оновити</button><button class="delate_row">Видалити</button></td></tr>';
 		}
 	}
+
+	// Resort fields
+		$resort_args = array(
+			'numberposts' => -1,
+			'orderby'     => 'date',
+			'order'       => 'DESC',
+			'post_type'   => 'resort',
+			'suppress_filters' => true, // подавление работы фильтров изменения SQL запроса
+		);
+
+		$resort_posts = get_posts( $resort_args );
+		$resort_option = '';
+		$r_i = 1;
+		foreach($resort_posts as $r_post){
+		    $resort_option .= '<option value="'.$r_post->ID.'">'.$r_post->post_title.'</option>';
+		}
 	?>
 	<pre>
 		<?php //print_r($results); ?>
@@ -131,37 +147,43 @@ function add_my_setting(){
 			}
 			$('.add_transport_row').click(function (e) {
 				e.preventDefault();
-				$('.transport_wrap tbody').append('<tr data-id="none"><td><input type="text" name="name"></td><td><button class="button button-primary save_row">Зберегти</button><button class="delate_row">Видалити</button></td>');
+				if (!$('.transport_wrap tbody tr[data-id="none"]').length) {
+					$('.transport_wrap tbody').append('<tr data-id="none"><td><input type="text" name="name"></td><td><button class="button button-primary save_row">Зберегти</button><button class="delate_row">Видалити</button></td>');
+				}
 			});
+
 			$('.transport_wrap ').on('click','.save_row', function () {
 				var that = $( this );
-
-				var data = {
-					action: 'save_transport_row',
-					name: $(this).closest('tr').find('input[name="name"]').val(),
-				}
-				$.ajax({
-				  url: "<?php echo admin_url('admin-ajax.php'); ?>",
-				  data: data,
-				  type: 'post',
-				}).done(function(resp) {
-					//Deal with all stuff
-					var response = jQuery.parseJSON(resp);
-					//console.log(response.status);
-					if (response.status) {
-						that.addClass( "update_row" );
-						that.removeClass( "save_row" );
-						that.html('Оновити');
-						that.closest('tr').attr('data-id', response.id);
-						showMessage('Місто успішно додано.',true);
-					} else {
-						showMessage('Місто з цим іменем вже існує.',false);
+				if (that.closest('tr').find('input[name="name"]').val().trim() == '' ) {
+					showMessage('Поле місто не може бути пустим!',false);
+				} else {
+					var data = {
+						action: 'save_transport_row',
+						name: $(this).closest('tr').find('input[name="name"]').val(),
 					}
-
-				}).fail(function () {
-					showMessage('Сталась помилка, спробуйте перегрузити сторінку і повторити, якщо не допомагає звяжіться з розробником!',false);
-				});
+					$.ajax({
+					  url: "<?php echo admin_url('admin-ajax.php'); ?>",
+					  data: data,
+					  type: 'post',
+					}).done(function(resp) {
+						//Deal with all stuff
+						var response = jQuery.parseJSON(resp);
+						//console.log(response.status);
+						if (response.status) {
+							that.addClass( "update_row" );
+							that.removeClass( "save_row" );
+							that.html('Оновити');
+							that.closest('tr').attr('data-id', response.id);
+							showMessage('Місто успішно додано.',true);
+						} else {
+							showMessage('Місто з цим іменем вже існує.',false);
+						}
+					}).fail(function () {
+						showMessage('Сталась помилка, спробуйте перегрузити сторінку і повторити, якщо не допомагає звяжіться з розробником!',false);
+					});
+				}
 			});
+
 			$('.transport_wrap ').on('click','.delate_row', function () {
 				var that = $(this);
 					var fadeTime = 300;
@@ -194,11 +216,37 @@ function add_my_setting(){
 					  showMessage('Сталась помилка, спробуйте перегрузити сторінку і повторити, якщо не допомагає звяжіться з розробником!',false);
 					});
 				}
-			})
+			});
+
+			$('.transport_wrap ').on('click','.update_row', function () {
+				var that = $(this);
+				if (that.closest('tr').find('input[name="name"]').val().trim() == '' ) {
+					showMessage('Поле місто не може бути пустим!',false);
+				} else {
+					var data = {
+				  action: 'update_transport_row',
+				  id: that.closest('tr').attr('data-id'),
+					  name: that.closest('tr').find('input[name="name"]').val(),
+					}
+					$.ajax({
+					  url: "<?php echo admin_url('admin-ajax.php'); ?>",
+					  data: data,
+					  type: 'post',
+					}).done(function(resp) {
+					  var response = jQuery.parseJSON(resp);
+					  if (response.status) {
+						showMessage('Місто успішно оновлено.',true);
+					  } else {
+					  	showMessage('Ви нічого не ввели!',false);
+					  }
+					}).fail(function () {
+					  showMessage('Сталась помилка, спробуйте перегрузити сторінку і повторити, якщо не допомагає звяжіться з розробником!',false);
+					});
+				}
+			});
 		})
 	</script>
 	<?php
-
 }
 
 function save_transport_row() {
@@ -207,27 +255,22 @@ function save_transport_row() {
 	$table_name = $wpdb->prefix . 'transport';
 
 	$name = $_POST['name'];
-
+	$name = trim($name);
 	$results = $wpdb->get_results( "SELECT * FROM $table_name WHERE name='$name'", OBJECT );
 	if (!empty($results)) {
-		require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
-		dbDelta( $results );
 		$resp = [
 			'status'=> false,
 			'message'=>'city exist'
 		];
-		wp_die(json_encode($resp));
 	} else {
 		$wpdb->insert( $table_name, array('name'=> trim($name)));
-		require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
-		dbDelta( $results );
 		$resp = [
 			'status'=> true,
 			'message'=>'done',
 			'id'=>$wpdb->insert_id
 		];
-		wp_die(json_encode($resp));
 	}
+	wp_die(json_encode($resp));
 }
 add_action('wp_ajax_save_transport_row', 'save_transport_row');
 
@@ -250,9 +293,41 @@ function remove_transport_row() {
 			'message'=>'no row was founded'
 		];
 	}
-		wp_die(json_encode($resp));
+	wp_die(json_encode($resp));
 }
 add_action('wp_ajax_remove_transport_row', 'remove_transport_row');
+
+function update_transport_row() {
+	global $wpdb;
+	$charset_collate = $wpdb->get_charset_collate();
+	$table_name = $wpdb->prefix . 'transport';
+
+	$id = $_POST['id'];
+	$name = $_POST['name'];
+
+	$results = $wpdb->update( $table_name ,array('name'=>$name), array('id' => $id));
+	//echo $result == 0;
+	if ($results === false) {
+		$resp = [
+			'status'=> false,
+			'message'=>'error'
+		];
+	} else {
+		if ($results) {
+			$resp = [
+				'status'=> true,
+				'message'=>'ended successfuly'
+			];
+		} else {
+			$resp = [
+				'status'=> false,
+				'message'=>'no row was founded'
+			];
+		}
+	}
+	wp_die(json_encode($resp));
+}
+add_action('wp_ajax_update_transport_row', 'update_transport_row');
 
 function create_transport_table_db() {
 
@@ -263,6 +338,8 @@ function create_transport_table_db() {
 	$sql = "CREATE TABLE $table_name (
 		id mediumint(9) NOT NULL AUTO_INCREMENT,
 		name VARCHAR(250) NULL,
+		resort bigint(11) NULL,
+		country bigint(11) NULL,
 		UNIQUE KEY id (id)
 	) $charset_collate;";
 
@@ -270,3 +347,84 @@ function create_transport_table_db() {
 	dbDelta( $sql );
 }
 create_transport_table_db();
+
+
+/* Добавляем блоки в основную колонку на страницах постов и пост. страниц */
+function city_box() {
+	$screens = array( 'room' );
+	foreach ( $screens as $screen )
+		add_meta_box( 'city_section', 'Місто', 'city_box_callback', $screen );
+}
+add_action('add_meta_boxes', 'city_box');
+
+/* HTML код блока */
+function city_box_callback() {
+	global $wpdb, $post;
+	$charset_collate = $wpdb->get_charset_collate();
+	$table_name = $wpdb->prefix . 'transport';
+
+	$results = $wpdb->get_results( "SELECT * FROM $table_name", OBJECT );
+	$option_html = '';
+	$city = get_post_meta( $post->ID, 'city', true);
+	foreach ($results as $value) {
+		if ($city ==$value->id) {
+			$selected = 'selected';
+		} else {
+			$selected = '';
+		}
+		$option_html .= '<option '.$selected.' value="'.$value->id.'">'.$value->name.'</option>';
+	}
+	// Используем nonce для верификации
+	wp_nonce_field( plugin_basename(__FILE__), 'myplugin_noncename' );
+
+	// Поля формы для введения данных 
+	?>
+	<table class="form-table">
+		<tbody>
+			<tr class="form-field pods-field pods-field-input pods-form-ui-row-type-pick pods-form-ui-row-name-country ">
+		        <th scope="row" valign="top"><label>Місто <!-- <abbr title="required" class="required">*</abbr> --></label></th>
+		        <td>
+		            <div class="pods-submittable-fields">
+		                <select id="city" name="city">
+		                    <option value="">-- Select One --</option>
+		                    <?php echo $option_html; ?>
+		                </select>
+		            </div>
+		        </td>
+		    </tr>
+		</tbody>
+	</table>
+    <?php
+}
+
+/* Сохраняем данные, когда пост сохраняется */
+function save_city_postdata( $post_id ) {
+/*	// проверяем nonce нашей страницы, потому что save_post может быть вызван с другого места.
+	if ( ! wp_verify_nonce( $_POST['myplugin_noncename'], plugin_basename(__FILE__) ) )
+		return $post_id;*/
+
+	// проверяем, если это автосохранение ничего не делаем с данными нашей формы.
+	if ( defined('DOING_AUTOSAVE') && DOING_AUTOSAVE ) 
+		return $post_id;
+
+	// проверяем разрешено ли пользователю указывать эти данные
+	if (! current_user_can( 'edit_page', $post_id ) ) {
+		  return $post_id;
+	} elseif( ! current_user_can( 'edit_post', $post_id ) ) {
+		return $post_id;
+	}
+
+	// Убедимся что поле установлено.
+	if ( ! isset( $_POST['city'] ) )
+		return;
+
+	// Все ОК. Теперь, нужно найти и сохранить данные
+	// Очищаем значение поля input.
+	if (isset($_POST['city'])) {
+		$my_data = sanitize_text_field( $_POST['city'] );
+
+		// Обновляем данные в базе данных.
+		update_post_meta( $post_id, 'city', $my_data );
+	}
+}
+add_action( 'save_post', 'save_city_postdata' );

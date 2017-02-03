@@ -376,6 +376,11 @@ function leotur_scripts() {
 	wp_enqueue_style( 'leotur-ie8', get_theme_file_uri( '/assets/css/ie8.css' ), array( 'leotur-style' ), '1.0' );
 	wp_style_add_data( 'leotur-ie8', 'conditional', 'lt IE 9' );
 
+
+	// Load the bootstrap specific stylesheet.
+	wp_enqueue_style( 'bootstrap', get_theme_file_uri( '/assets/css/bootstrap.min.css' ), array( 'leotur-style' ), '1.0' );
+
+
 	// Load the html5 shiv.
 	wp_enqueue_script( 'html5', get_theme_file_uri( '/assets/js/html5.js' ), array(), '3.7.3' );
 	wp_script_add_data( 'html5', 'conditional', 'lt IE 9' );
@@ -397,7 +402,7 @@ function leotur_scripts() {
 
 	wp_enqueue_script( 'jquery-scrollto', get_theme_file_uri( '/assets/js/jquery.scrollTo.js' ), array( 'jquery' ), '2.1.2', true );
 
-	wp_localize_script( 'leotur-skip-link-focus-fix', 'leoturScreenReaderText', $leotur_l10n );
+	wp_localize_script( 'leotur-skip-link-focus-fix', 'twentyseventeenScreenReaderText', $leotur_l10n );
 
 	if ( is_singular() && comments_open() && get_option( 'thread_comments' ) ) {
 		wp_enqueue_script( 'comment-reply' );
