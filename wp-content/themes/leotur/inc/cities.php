@@ -14,10 +14,6 @@ function add_my_setting(){
 		foreach ($results as $item) {
 			$transport_items_html .= '<tr data-id="'.$item->id.'">';
 			$transport_items_html .= '<td><input type="text" name="name" value="'.$item->name.'"></td>';
-			$transport_items_html .= '<td><input type="text" name="avia_adult" value="'.$item->avia_adult.'"></td>';
-			$transport_items_html .= '<td><input type="text" name="avia_child" value="'.$item->avia_child.'"></td>';
-			$transport_items_html .= '<td><input type="text" name="bus_adult" value="'.$item->bus_adult.'"></td>';
-			$transport_items_html .= '<td><input type="text" name="bus_child" value="'.$item->bus_child.'"></td>';
 			$transport_items_html .= '<td><button class="button button-primary update_row">Оновити</button><button class="delate_row">Видалити</button></td></tr>';
 		}
 	}
@@ -36,6 +32,7 @@ function add_my_setting(){
 		<style type="text/css">
 			.transport_wrap table {
 				width: 100%;
+				border-collapse: collapse;
 			}
 			.transport_wrap table button{
 				display: inline-block;
@@ -59,6 +56,35 @@ function add_my_setting(){
 				width: 100%;
 				line-height: 30px;
 			}
+			.transport_wrap table tr {
+				border: 1px solid #ddd;
+			}
+			.transport_wrap tbody tr:nth-child(2n) {
+				background: #fff;
+			}
+			.transport_wrap tbody tr:nth-child(2n+1) {
+				background: #f9f9f9;
+			}
+			.transport_wrap table td {
+				padding-right: 5px;
+			}
+			.message_wrap {
+			    position: fixed;
+			    top: 40px;
+			    right: 20px;
+			    border-radius: 10px;
+			    overflow: hidden;
+			    color: #fff;
+			}
+			.message_wrap div  {
+				padding: 10px 15px;
+			}
+			.message_wrap .fail {
+				background-color: red;
+			}
+			.message_wrap .success{
+				background-color:#0095ff;
+			}
 		</style>
 		<div class="transport_wrap">
 			<!-- <div class="transport_heading">
@@ -74,10 +100,6 @@ function add_my_setting(){
 				<thead>
 					<tr>
 						<td>Місто</td>
-						<td>Авіа (дорослий)</td>
-						<td>Авіа (дитячий)</td>
-						<td>Автобус (дорослий)</td>
-						<td>Автобус (дитячий)</td>
 						<td><a href="#" class="btn"><div class="dashicons dashicons-plus add_transport_row"></div></a></td>
 					</tr>
 				</thead>
@@ -88,27 +110,90 @@ function add_my_setting(){
 		</div>
 	</div>
 	<script type="text/javascript">
-		console.log(jQuery);
+
 		jQuery(document).ready(function ($) {
+			var popup;
+			function showMessage(message,status) {
+				clearTimeout(popup);
+
+				if(!$('.message_wrap').length) {
+					$('body').append('<div class="message_wrap" style="display:none;"></div>');
+				}
+				if (status) {
+					$('.message_wrap').html('<div class="success">'+message+'</div>');
+				} else {
+					$('.message_wrap').html('<div class="fail">'+message+'</div>');
+				}
+				$('.message_wrap').fadeIn(300);
+				popup = setTimeout(function () {
+					$('.message_wrap').fadeOut();
+				},3000);
+			}
 			$('.add_transport_row').click(function (e) {
 				e.preventDefault();
-				$('.transport_wrap tbody').append('<tr><td><input type="text" name="name"></td><td><input type="text" name="avia_adult"></td><td><input type="text" name="avia_child"></td><td><input type="text" name="bus_adult"></td></td><td><input type="text" name="bus_child"></td><td><button class="button button-primary save_row">Зберегти</button><button class="delate_row">Видалити</button></td>')
+				$('.transport_wrap tbody').append('<tr data-id="none"><td><input type="text" name="name"></td><td><button class="button button-primary save_row">Зберегти</button><button class="delate_row">Видалити</button></td>');
 			});
 			$('.transport_wrap ').on('click','.save_row', function () {
+				var that = $( this );
+
+				var data = {
+					action: 'save_transport_row',
+					name: $(this).closest('tr').find('input[name="name"]').val(),
+				}
 				$.ajax({
-				  url: "test.html",
-				  context: document.body
-				}).done(function() {
-				  $( this ).addClass( "done" );
+				  url: "<?php echo admin_url('admin-ajax.php'); ?>",
+				  data: data,
+				  type: 'post',
+				}).done(function(resp) {
+					//Deal with all stuff
+					var response = jQuery.parseJSON(resp);
+					//console.log(response.status);
+					if (response.status) {
+						that.addClass( "update_row" );
+						that.removeClass( "save_row" );
+						that.html('Оновити');
+						that.closest('tr').attr('data-id', response.id);
+						showMessage('Місто успішно додано.',true);
+					} else {
+						showMessage('Місто з цим іменем вже існує.',false);
+					}
+
+				}).fail(function () {
+					showMessage('Сталась помилка, спробуйте перегрузити сторінку і повторити, якщо не допомагає звяжіться з розробником!',false);
 				});
 			});
 			$('.transport_wrap ').on('click','.delate_row', function () {
 				var that = $(this);
-				var fadeTime = 300;
-				that.closest('tr').fadeOut(fadeTime);
-				setTimeout(function () {
-					that.closest('tr').remove();
-				},fadeTime);
+					var fadeTime = 300;
+				if (that.closest('tr').attr('data-id') == 'none') {
+					that.closest('tr').fadeOut(fadeTime);
+					setTimeout(function () {
+					  that.closest('tr').remove();
+					},fadeTime);
+				} else {
+					var data = {
+					  action: 'remove_transport_row',
+					  id: that.closest('tr').attr('data-id'),
+					}
+					$.ajax({
+					  url: "<?php echo admin_url('admin-ajax.php'); ?>",
+					  data: data,
+					  type: 'post',
+					}).done(function(resp) {
+					  var response = jQuery.parseJSON(resp);
+					  if (response.status) {
+						that.closest('tr').fadeOut(fadeTime);
+						setTimeout(function () {
+						that.closest('tr').remove();
+						},fadeTime);
+						showMessage('Місто успішно видалено.',true);
+					  } else {
+					  	showMessage('Сталась помилка, спробуйте перегрузити сторінку і повторити, якщо не допомагає звяжіться з розробником!',false);
+					  }
+					}).fail(function () {
+					  showMessage('Сталась помилка, спробуйте перегрузити сторінку і повторити, якщо не допомагає звяжіться з розробником!',false);
+					});
+				}
 			})
 		})
 	</script>
@@ -117,9 +202,57 @@ function add_my_setting(){
 }
 
 function save_transport_row() {
+	global $wpdb;
+	$charset_collate = $wpdb->get_charset_collate();
+	$table_name = $wpdb->prefix . 'transport';
 
+	$name = $_POST['name'];
+
+	$results = $wpdb->get_results( "SELECT * FROM $table_name WHERE name='$name'", OBJECT );
+	if (!empty($results)) {
+		require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
+		dbDelta( $results );
+		$resp = [
+			'status'=> false,
+			'message'=>'city exist'
+		];
+		wp_die(json_encode($resp));
+	} else {
+		$wpdb->insert( $table_name, array('name'=> trim($name)));
+		require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
+		dbDelta( $results );
+		$resp = [
+			'status'=> true,
+			'message'=>'done',
+			'id'=>$wpdb->insert_id
+		];
+		wp_die(json_encode($resp));
+	}
 }
 add_action('wp_ajax_save_transport_row', 'save_transport_row');
+
+function remove_transport_row() {
+	global $wpdb;
+	$charset_collate = $wpdb->get_charset_collate();
+	$table_name = $wpdb->prefix . 'transport';
+
+	$id = $_POST['id'];
+
+	$results = $wpdb->delete( $table_name , array('id' => $id));
+	if ($results) {
+		$resp = [
+			'status'=> true,
+			'message'=>'successfuly deleted'
+		];
+	} else {
+		$resp = [
+			'status'=> false,
+			'message'=>'no row was founded'
+		];
+	}
+		wp_die(json_encode($resp));
+}
+add_action('wp_ajax_remove_transport_row', 'remove_transport_row');
 
 function create_transport_table_db() {
 
@@ -130,10 +263,6 @@ function create_transport_table_db() {
 	$sql = "CREATE TABLE $table_name (
 		id mediumint(9) NOT NULL AUTO_INCREMENT,
 		name VARCHAR(250) NULL,
-		avia_adult bigint(11)  NULL,
-		avia_child bigint(11) NOT NULL,
-		bus_adult bigint(11) NOT NULL,
-		bus_child bigint(11) NULL,
 		UNIQUE KEY id (id)
 	) $charset_collate;";
 
