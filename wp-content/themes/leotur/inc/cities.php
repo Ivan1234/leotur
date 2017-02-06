@@ -8,31 +8,69 @@ add_action('admin_menu', function(){
 // подробнее смотрите API Настроек: http://wp-kama.ru/id_3773/api-optsiy-nastroek.html
 function add_my_setting(){
 	global $wpdb;
+	// Resort fields
+	$resort_args = array(
+		'numberposts' => -1,
+		'orderby'     => 'date',
+		'order'       => 'DESC',
+		'post_type'   => 'resort',
+		'suppress_filters' => true, // подавление работы фильтров изменения SQL запроса
+	);
+
+	$resort_posts = get_posts( $resort_args );
+	$resort_option = '<option value="">Вибиріть курот</option>';
+	$r_i = 1;
+
+
+	// Country fields
+	$country_args = array(
+		'numberposts' => -1,
+		'orderby'     => 'date',
+		'order'       => 'DESC',
+		'post_type'   => 'country',
+		'suppress_filters' => true, // подавление работы фильтров изменения SQL запроса
+	);
+
+	$country_posts = get_posts( $country_args );
+	$country_option = '<option value="">Вибиріть крїна</option>';
+	$c_i = 1;
+
 	$results = $wpdb->get_results( 'SELECT * FROM '.$wpdb->prefix . 'transport ORDER BY name', OBJECT );
 	$transport_items_html = '';
 	if (!empty($results)) {
 		foreach ($results as $item) {
 			$transport_items_html .= '<tr data-id="'.$item->id.'">';
 			$transport_items_html .= '<td><input type="text" name="name" value="'.$item->name.'"></td>';
+			$transport_items_html .= '<td><select name="resort">';
+			$transport_items_html .= '<option value="">Вибиріть курот</option>';
+			foreach($resort_posts as $r_post){
+				if ($r_post->ID == $item->resort) { $r_selected = 'selected'; }
+				else { $r_selected = ''; }
+			    $transport_items_html .= '<option '.$r_selected.' value="'.$r_post->ID.'">'.$r_post->post_title.'</option>';
+			}
+
+			$transport_items_html .= '</select></td>';
+			$transport_items_html .= '<td><select name="country">';
+			$transport_items_html .= '<option value="">Вибиріть крїна</option>';
+			foreach($country_posts as $c_post){
+				if ($c_post->ID == $item->country) { $c_selected = 'selected'; }
+				else { $c_selected = ''; }
+			    $transport_items_html .= '<option '.$c_selected.' value="'.$c_post->ID.'">'.$c_post->post_title.'</option>';
+			}
+			$transport_items_html .= '</select></td>';
 			$transport_items_html .= '<td><button class="button button-primary update_row">Оновити</button><button class="delate_row">Видалити</button></td></tr>';
 		}
 	}
 
-	// Resort fields
-		$resort_args = array(
-			'numberposts' => -1,
-			'orderby'     => 'date',
-			'order'       => 'DESC',
-			'post_type'   => 'resort',
-			'suppress_filters' => true, // подавление работы фильтров изменения SQL запроса
-		);
 
-		$resort_posts = get_posts( $resort_args );
-		$resort_option = '';
-		$r_i = 1;
-		foreach($resort_posts as $r_post){
-		    $resort_option .= '<option value="'.$r_post->ID.'">'.$r_post->post_title.'</option>';
-		}
+	foreach($resort_posts as $r_post){
+	    $resort_option .= '<option value="'.$r_post->ID.'">'.$r_post->post_title.'</option>';
+	}
+
+	foreach($country_posts as $c_post){
+	    $country_option .= '<option value="'.$c_post->ID.'">'.$c_post->post_title.'</option>';
+	}
+
 	?>
 	<pre>
 		<?php //print_r($results); ?>
@@ -70,7 +108,7 @@ function add_my_setting(){
 			}
 			.transport_wrap table input {
 				width: 100%;
-				line-height: 30px;
+				line-height: 20px;
 			}
 			.transport_wrap table tr {
 				border: 1px solid #ddd;
@@ -83,6 +121,8 @@ function add_my_setting(){
 			}
 			.transport_wrap table td {
 				padding-right: 5px;
+				padding-top: 5px;
+				padding-bottom: 5px;
 			}
 			.message_wrap {
 			    position: fixed;
@@ -116,6 +156,8 @@ function add_my_setting(){
 				<thead>
 					<tr>
 						<td>Місто</td>
+						<td>Курорт</td>
+						<td>Країна</td>
 						<td><a href="#" class="btn"><div class="dashicons dashicons-plus add_transport_row"></div></a></td>
 					</tr>
 				</thead>
@@ -148,7 +190,7 @@ function add_my_setting(){
 			$('.add_transport_row').click(function (e) {
 				e.preventDefault();
 				if (!$('.transport_wrap tbody tr[data-id="none"]').length) {
-					$('.transport_wrap tbody').append('<tr data-id="none"><td><input type="text" name="name"></td><td><button class="button button-primary save_row">Зберегти</button><button class="delate_row">Видалити</button></td>');
+					$('.transport_wrap tbody').append('<tr data-id="none"><td><input type="text" name="name"></td><td><select name="resort"><?php echo $resort_option ?>"></select></td><td><select name="country"><?php echo $country_option ?>"></select></td><td><button class="button button-primary save_row">Зберегти</button><button class="delate_row">Видалити</button></td>');
 				}
 			});
 
@@ -156,10 +198,16 @@ function add_my_setting(){
 				var that = $( this );
 				if (that.closest('tr').find('input[name="name"]').val().trim() == '' ) {
 					showMessage('Поле місто не може бути пустим!',false);
-				} else {
+				} else if (that.closest('tr').find('select[name="resort"]').val().trim() == '') {
+					showMessage('Поле курорт не може бути пустим!',false);
+				} else if (that.closest('tr').find('select[name="country"]').val().trim() == '') {
+					showMessage('Поле країна не може бути пустим!',false);
+				} else  {
 					var data = {
 						action: 'save_transport_row',
 						name: $(this).closest('tr').find('input[name="name"]').val(),
+						resort: $(this).closest('tr').find('select[name="resort"]').val(),
+						country: $(this).closest('tr').find('select[name="country"]').val(),
 					}
 					$.ajax({
 					  url: "<?php echo admin_url('admin-ajax.php'); ?>",
@@ -224,9 +272,11 @@ function add_my_setting(){
 					showMessage('Поле місто не може бути пустим!',false);
 				} else {
 					var data = {
-				  action: 'update_transport_row',
-				  id: that.closest('tr').attr('data-id'),
+					  action: 'update_transport_row',
+					  id: that.closest('tr').attr('data-id'),
 					  name: that.closest('tr').find('input[name="name"]').val(),
+					  resort: $(this).closest('tr').find('select[name="resort"]').val(),
+					  country: $(this).closest('tr').find('select[name="country"]').val(),
 					}
 					$.ajax({
 					  url: "<?php echo admin_url('admin-ajax.php'); ?>",
@@ -256,6 +306,13 @@ function save_transport_row() {
 
 	$name = $_POST['name'];
 	$name = trim($name);
+
+	$resort = $_POST['resort'];
+	$resort = trim($resort);
+
+	$country = $_POST['country'];
+	$country = trim($country);
+
 	$results = $wpdb->get_results( "SELECT * FROM $table_name WHERE name='$name'", OBJECT );
 	if (!empty($results)) {
 		$resp = [
@@ -263,7 +320,7 @@ function save_transport_row() {
 			'message'=>'city exist'
 		];
 	} else {
-		$wpdb->insert( $table_name, array('name'=> trim($name)));
+		$wpdb->insert( $table_name, array('name'=> trim($name), 'resort'=> trim($resort), 'country'=> trim($country)));
 		$resp = [
 			'status'=> true,
 			'message'=>'done',
@@ -282,6 +339,7 @@ function remove_transport_row() {
 	$id = $_POST['id'];
 
 	$results = $wpdb->delete( $table_name , array('id' => $id));
+
 	if ($results) {
 		$resp = [
 			'status'=> true,
@@ -304,8 +362,10 @@ function update_transport_row() {
 
 	$id = $_POST['id'];
 	$name = $_POST['name'];
+	$resort = $_POST['resort'];
+	$country = $_POST['country'];
 
-	$results = $wpdb->update( $table_name ,array('name'=>$name), array('id' => $id));
+	$results = $wpdb->update( $table_name ,array('name'=>$name, 'resort'=>$resort, 'country'=>$country), array('id' => $id));
 	//echo $result == 0;
 	if ($results === false) {
 		$resp = [

@@ -44,6 +44,13 @@ Use it to make something cool, have fun, and share what you've learned with othe
 Styles based on Normalize v5.0.0 @link https://github.com/necolas/normalize.css
 --------------------------------------------------------------*/
 
+.city-wrap .checkbox+.checkbox,
+.city-wrap .checkbox,
+.hotel-wrap .checkbox+.checkbox,
+.hotel-wrap .checkbox {
+	margin-top: 0;
+}
+
 html {
 	font-family: sans-serif;
 	line-height: 1.15;

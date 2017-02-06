@@ -246,4 +246,22 @@
 		$body.addClass( 'has-header-video' );
 	});
 
+	$(document).on('change', '#resort', function () {
+		that = $(this);
+		if (that.val() != '') {
+			$('.city-wrap .checkbox').css('display','none');
+			$('.city-wrap label[data-resort-id="'+that.val()+'"]').each(function () {
+				$(this).closest('.checkbox').css('display','block');
+			});
+
+			$('.hotel-wrap .checkbox').css('display','none');
+			$('.hotel-wrap label[data-resort-id="'+that.val()+'"]').each(function () {
+				$(this).closest('.checkbox').css('display','block');
+			});
+		} else {
+			$('.city-wrap .checkbox').css('display','block');
+			$('.hotel-wrap .checkbox').css('display','block');
+		}
+	})
+
 })( jQuery );
