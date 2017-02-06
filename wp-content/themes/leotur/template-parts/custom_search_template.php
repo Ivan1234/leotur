@@ -162,7 +162,7 @@ get_header(); ?>
 					<?php echo $city_html; ?>
 				</div>
 			</div>
-			<div class="col-md-3 form-group hotel-wrap">
+			<div class="col-md-3 form-group hotel-cat-wrap">
 				<label><?php _e( 'Категорії', 'leotur' ); ?></label>
 				<div>
 					<?php echo $cat_html; ?>
@@ -174,7 +174,7 @@ get_header(); ?>
 					<?php echo $hotel_html; ?>
 				</div>
 			</div>
-			<div class="col-md-3 form-group hotel-wrap">
+			<div class="col-md-3 form-group food-wrap">
 				<label><?php _e( 'Харчування', 'leotur' ); ?></label>
 				<div>
 					<div class="checkbox">
