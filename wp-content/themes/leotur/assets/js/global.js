@@ -255,7 +255,7 @@
 			});
 
 			$('.hotel-wrap .checkbox').css('display','none');
-			$('.hotel-wrap label[data-resort-id="'+that.val()+'"]').each(function () {
+			$('.hotel-wrap input[data-resort-id="'+that.val()+'"]').each(function () {
 				$(this).closest('.checkbox').css('display','block');
 			});
 		} else {

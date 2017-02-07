@@ -520,3 +520,151 @@ require get_parent_theme_file_path( '/inc/icon-functions.php' );
  * Create new admin page.
  */
 require get_parent_theme_file_path( '/inc/cities.php' );
+
+
+function change_form_fields () {
+	if (isset($_POST['country_id'])) {
+		$country_id = $_POST['country_id'];
+		// Resort fields
+		$resort_args = array(
+			'numberposts' => -1,
+			'orderby'     => 'date',
+			'order'       => 'DESC',
+			'meta_key'    => 'country',
+			'meta_value'  =>$country_id,
+			'post_type'   => 'resort',
+			'suppress_filters' => true, // подавление работы фильтров изменения SQL запроса
+		);
+
+		$resort_posts = get_posts( $resort_args );
+		$resort_option = "<option value=''>Виберіть курорт</option>";
+		foreach($resort_posts as $r_post){ 
+			/*echo "<pre>";
+			print_r($r_post);
+			echo "</pre>";*/
+		    $resort_option .= "<option value='".$r_post->ID."'>".$r_post->post_title."</option>";
+		}
+
+
+		// City fields
+		$city_args = array(
+			'numberposts' => -1,
+			'orderby'     => 'date',
+			'order'       => 'DESC',
+			'meta_key'    => 'country',
+			'meta_value'  =>$country_id,
+			'post_type'   => 'city',
+			'suppress_filters' => true, // подавление работы фильтров изменения SQL запроса
+		);
+		$city_posts = get_posts( $city_args );
+		$city_html = '';
+		$avia_dates_arr = [];
+		foreach($city_posts as $c_post){
+			$city_html .= "<div class='checkbox'><label data-id='".$c_post->ID."' data-resort-id='". get_post_meta($c_post->ID,"resort")[0]["ID"]."'>";
+			$city_html .= "<input type='checkbox' class='town_to' data-id='".$c_post->ID."' name='city[]' value='".$c_post->ID."'>".$c_post->post_title;
+			$city_html .= "</label></div>";
+			$avia = get_row('avia',$c_post);
+
+
+			if( have_rows('avia',$c_post) ){
+
+			    while( have_rows('avia',$c_post) ) { the_row();
+					$avia_dates_arr[] = get_sub_field('departure');
+			    }
+
+			}
+
+		}
+		$avia_dates_arr = array_unique($avia_dates_arr);
+
+		// Hotel fields
+		$hotel_args = array(
+			'numberposts' => -1,
+			'orderby'     => 'date',
+			'order'       => 'DESC',
+			'meta_key'    => 'country',
+			'meta_value'  =>$country_id,
+			'post_type'   => 'hotel',
+			'suppress_filters' => true, // подавление работы фильтров изменения SQL запроса
+		);
+
+		$hotel_posts = get_posts( $hotel_args );
+		$hotel_html = '';
+		$hotel_cat_arr = [];
+		foreach($hotel_posts as $h_post){
+			$resortID = get_post_meta($h_post->ID,'resort')[0]['ID'];
+			$countryID = get_post_meta($h_post->ID,'country')[0]['ID'];
+			$cityID = get_post_meta($h_post->ID,'city')[0]['ID'];
+			$single_hotel_cat = get_field('hotel_cat',$h_post->ID);
+
+			$hotel_cat_arr[] = $single_hotel_cat;
+			if ($single_hotel_cat == 3 || $single_hotel_cat == 4 || $single_hotel_cat == 5) {
+				$single_hotel_cat_text = $single_hotel_cat.'*';
+			} else if ($single_hotel_cat == 'apart') {
+				$single_hotel_cat_text = 'Апартаменти';
+			} else {
+				$single_hotel_cat_text = 'Інші';
+			}
+		    $hotel_html .= "<div class='checkbox'><label>";
+			$hotel_html .= "<input type='checkbox' name='city[]' class='hotel_list' data-id='".$h_post->ID."' data-cat-id='".$single_hotel_cat."' data-resort-id='".$resortID."' data-country-id='".$countryID."' data-city-id='".$cityID."' value='".$h_post->ID."'>".$h_post->post_title ." ".$single_hotel_cat_text;
+			$hotel_html .= "</label></div>";
+		}
+
+		// Cat fields
+		$hotel_cat_arr = array_unique($hotel_cat_arr);
+		$cat_html = '';
+		foreach($hotel_cat_arr as $cat){
+			if ($cat == 3 || $cat == 4 || $cat == 5) {
+				$single_cat_text = $cat.'*';
+			} else if ($cat == 'apart') {
+				$single_cat_text = 'Апартаменти';
+			} else {
+				$single_cat_text = 'Інші';
+			}
+			$cat_html .= "<div class='checkbox'><label>";
+			$cat_html .= "<input type='checkbox' class='hotel_stars' name='hotel_cat[]' value='".$cat."'>".$single_cat_text;
+			$cat_html .= "</label></div>";
+		}
+	}
+	wp_die(json_encode(array('resort_option' => $resort_option, 'city_html' => $city_html, 'hotel_html' => $hotel_html, 'cat_html' => $cat_html )));
+}
+add_action('wp_ajax_change_form_fields', 'change_form_fields');
+add_action('wp_ajax_nopriv_change_form_fields', 'change_form_fields');
+
+function search_hotels () {
+
+	if (isset($_POST['country'])) {
+		$country_id =  $_POST['country'];
+
+		$rooms_args = array(
+			'numberposts' => -1,
+			'orderby'     => 'date',
+			'order'       => 'DESC',
+			'meta_key'    => 'country',
+			'meta_value'  =>$country_id,
+			'post_type'   => 'room',
+			'suppress_filters' => true, // подавление работы фильтров изменения SQL запроса
+		);
+
+		$rooms_posts = get_posts( $rooms_args );
+		$rooms_option = '';
+		foreach($rooms_posts as $r_post){ 
+			$hotel_url =  get_post_meta($r_post->ID,'hotel')[0]['guid'];
+		 ?>
+			<article class="row">
+				<div class="col-md-3">
+					<a href="<?php echo $hotel_url; ?>"><?php echo  get_the_post_thumbnail($r_post); ?></a>
+				</div>
+				<div class="col-md-9">
+					<h3><a href="<?php echo $hotel_url; ?>";"><?php echo $r_post->post_title  ?></a></h3>
+				</div>
+			</article>
+			<?php
+		    //$resort_option .= '<option value="'.$r_post->ID.'">'.$r_post->post_title.'</option>';
+		}
+	}
+	wp_die();
+}
+
+add_action('wp_ajax_search_hotels', 'search_hotels');
+add_action('wp_ajax_nopriv_search_hotels', 'search_hotels');

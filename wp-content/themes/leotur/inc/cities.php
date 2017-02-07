@@ -1,8 +1,8 @@
 <?php
-add_action('admin_menu', function(){
+/*add_action('admin_menu', function(){
 	//add_menu_page( $page_title, $menu_title, $capability, $menu_slug, $function, $icon_url, $position );
 	add_menu_page( 'Місто', 'Місто', 'edit_pages', 'city', 'add_my_setting', 'dashicons-admin-post', 48 ); 
-} );
+} );*/
 
 // функция отвечает за вывод страницы настроек
 // подробнее смотрите API Настроек: http://wp-kama.ru/id_3773/api-optsiy-nastroek.html
@@ -410,15 +410,15 @@ create_transport_table_db();
 
 
 /* Добавляем блоки в основную колонку на страницах постов и пост. страниц */
-function city_box() {
+/*function city_box() {
 	$screens = array( 'room' );
 	foreach ( $screens as $screen )
 		add_meta_box( 'city_section', 'Місто', 'city_box_callback', $screen );
 }
 add_action('add_meta_boxes', 'city_box');
-
+*/
 /* HTML код блока */
-function city_box_callback() {
+/*function city_box_callback() {
 	global $wpdb, $post;
 	$charset_collate = $wpdb->get_charset_collate();
 	$table_name = $wpdb->prefix . 'transport';
@@ -455,13 +455,10 @@ function city_box_callback() {
 		</tbody>
 	</table>
     <?php
-}
+}*/
 
 /* Сохраняем данные, когда пост сохраняется */
-function save_city_postdata( $post_id ) {
-/*	// проверяем nonce нашей страницы, потому что save_post может быть вызван с другого места.
-	if ( ! wp_verify_nonce( $_POST['myplugin_noncename'], plugin_basename(__FILE__) ) )
-		return $post_id;*/
+/*function save_city_postdata( $post_id ) {
 
 	// проверяем, если это автосохранение ничего не делаем с данными нашей формы.
 	if ( defined('DOING_AUTOSAVE') && DOING_AUTOSAVE ) 
@@ -487,4 +484,4 @@ function save_city_postdata( $post_id ) {
 		update_post_meta( $post_id, 'city', $my_data );
 	}
 }
-add_action( 'save_post', 'save_city_postdata' );
+add_action( 'save_post', 'save_city_postdata' );*/

@@ -50,7 +50,19 @@ Styles based on Normalize v5.0.0 @link https://github.com/necolas/normalize.css
 .hotel-wrap .checkbox {
 	margin-top: 0;
 }
-
+.checkbox-wrap {
+    overflow: auto;
+    height: 135px;
+    background: #ccc;
+    padding: 10px;
+    border-radius: 5px;
+}
+.checkbox-wrap > div:first-child {
+	margin-top: 0;
+}
+.checkbox-wrap > div:last-child {
+	margin-bottom: 0;
+}
 html {
 	font-family: sans-serif;
 	line-height: 1.15;
