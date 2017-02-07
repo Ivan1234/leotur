@@ -65,6 +65,7 @@ get_header(); ?>
 		    $resort_option .= '<option value="'.$r_post->ID.'">'.$r_post->post_title.'</option>';
 		}
 
+<<<<<<< HEAD
 
 		// City fields
 		$city_args = array(
@@ -110,12 +111,57 @@ get_header(); ?>
 				$single_hotel_cat_text = 'Апартаменти';
 			} else {
 				$single_hotel_cat_text = 'Інші';
+=======
+		global $wpdb;
+		$results = $wpdb->get_results( 'SELECT * FROM '.$wpdb->prefix . 'transport WHERE country="'.$first_country_id.'"', OBJECT );
+		$city_html = '';
+		if (!empty($results)) {
+			foreach ($results as $item) {
+				$city_html .= '<div class="checkbox"><label data-id="'.$item->id.'" data-resort-id="'.$item->resort.'">';
+				$city_html .= '<input type="checkbox" name="city[]" value="'.$item->id.'">'.$item->name;
+				$city_html .= '</label></div>';
+>>>>>>> f30a3189b67e7d03d41615c70bc42cffc4d31f7a
 			}
 		    $hotel_html .= '<div class="checkbox"><label data-id="'.$h_post->ID.'" data-cat-id="'.$single_hotel_cat.'" data-resort-id="'.$resortID.'" data-country-id="'.$countryID.'">';
 			$hotel_html .= '<input type="checkbox" name="city[]" value="'.$h_post->ID.'">'.$h_post->post_title .' '.$single_hotel_cat_text;
 			$hotel_html .= '</label></div>';
 		}
 
+<<<<<<< HEAD
+=======
+		// Hotel fields
+		$hotel_args = array(
+			'numberposts' => -1,
+			'orderby'     => 'date',
+			'order'       => 'DESC',
+			'meta_key'    => 'country',
+			'meta_value'  =>$first_country_id,
+			'post_type'   => 'hotel',
+			'suppress_filters' => true, // подавление работы фильтров изменения SQL запроса
+		);
+
+		$hotel_posts = get_posts( $hotel_args );
+		$hotel_html = '';
+		$hotel_cat_arr = [];
+		foreach($hotel_posts as $h_post){
+			$resortID = get_post_meta($h_post->ID,'resort')[0]['ID'];
+			$countryID = get_post_meta($h_post->ID,'country')[0]['ID'];
+			$single_hotel_cat = get_field('hotel_cat',$h_post->ID);
+
+			$hotel_cat_arr[] = $single_hotel_cat;
+			if ($single_hotel_cat == 3 || $single_hotel_cat == 4 || $single_hotel_cat == 5) {
+				$single_hotel_cat_text = $single_hotel_cat.'*';
+			} else if ($single_hotel_cat == 'apart') {
+				$single_hotel_cat_text = 'Апартаменти';
+			} else {
+				$single_hotel_cat_text = 'Інші';
+			}
+		    $hotel_html .= '<div class="checkbox"><label data-id="'.$h_post->ID.'" data-cat-id="'.$single_hotel_cat.'" data-resort-id="'.$resortID.'" data-country-id="'.$countryID.'">';
+			$hotel_html .= '<input type="checkbox" name="city[]" value="'.$h_post->ID.'">'.$h_post->post_title .' '.$single_hotel_cat_text;
+			$hotel_html .= '</label></div>';
+		}
+
+>>>>>>> f30a3189b67e7d03d41615c70bc42cffc4d31f7a
 		// Cat fields
 		$hotel_cat_arr = array_unique($hotel_cat_arr);
 		$cat_html = '';
@@ -162,10 +208,13 @@ get_header(); ?>
 					<?php echo $resort_option  ?>
 				</select>
 			</div>
+<<<<<<< HEAD
 			<div class="col-md-6 form-group">
 				<label for="city"><?php _e( 'Дата відправлення', 'leotur' ); ?></label>
 				<input type="text" name="search_tour_date_from" id="search_tour_date_from" class="form-control">
 			</div>
+=======
+>>>>>>> f30a3189b67e7d03d41615c70bc42cffc4d31f7a
 		</div>
 		<div class="row">
 			<div class="col-md-3 form-group city-wrap">
@@ -174,7 +223,11 @@ get_header(); ?>
 					<?php echo $city_html; ?>
 				</div>
 			</div>
+<<<<<<< HEAD
 			<div class="col-md-3 form-group hotel-wrap">
+=======
+			<div class="col-md-3 form-group hotel-cat-wrap">
+>>>>>>> f30a3189b67e7d03d41615c70bc42cffc4d31f7a
 				<label><?php _e( 'Категорії', 'leotur' ); ?></label>
 				<div>
 					<?php echo $cat_html; ?>
@@ -186,7 +239,11 @@ get_header(); ?>
 					<?php echo $hotel_html; ?>
 				</div>
 			</div>
+<<<<<<< HEAD
 			<div class="col-md-3 form-group hotel-wrap">
+=======
+			<div class="col-md-3 form-group food-wrap">
+>>>>>>> f30a3189b67e7d03d41615c70bc42cffc4d31f7a
 				<label><?php _e( 'Харчування', 'leotur' ); ?></label>
 				<div>
 					<div class="checkbox">
