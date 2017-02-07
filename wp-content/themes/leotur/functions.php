@@ -379,6 +379,7 @@ function leotur_scripts() {
 
 	// Load the bootstrap specific stylesheet.
 	wp_enqueue_style( 'bootstrap', get_theme_file_uri( '/assets/css/bootstrap.min.css' ), array( 'leotur-style' ), '1.0' );
+	wp_enqueue_style( 'jquery-ui-style', get_theme_file_uri( '/assets/css/jquery-ui.css' ), array( 'leotur-style' ), '1.0' );
 
 
 	// Load the html5 shiv.
@@ -397,6 +398,7 @@ function leotur_scripts() {
 		$leotur_l10n['collapse']       = __( 'Collapse child menu', 'leotur' );
 		$leotur_l10n['icon']           = leotur_get_svg( array( 'icon' => 'angle-down', 'fallback' => true ) );
 	}
+	wp_enqueue_script( 'leotur-jquery-ui', get_theme_file_uri( '/assets/js/plugins.js' ), array( 'jquery' ), '1.0', true );
 
 	wp_enqueue_script( 'leotur-global', get_theme_file_uri( '/assets/js/global.js' ), array( 'jquery' ), '1.0', true );
 
